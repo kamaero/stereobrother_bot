@@ -1,0 +1,177 @@
+# Markdown lint configuration for StereoBrother Bot
+# Based on markdownlint default rules with customizations
+
+# Default state for all rules
+default: true
+
+# Rule configurations
+MD001: false  # Heading levels should only increment by one level at a time
+MD002: false  # First heading should be a top-level heading
+MD003:        # Heading style
+  style: "atx"
+MD004:        # Unordered list style
+  style: "dash"
+MD005: false  # Inconsistent indentation for list items at the same level
+MD006: false  # Consider starting bulleted lists at the beginning of the line
+MD007:        # Unordered list indentation
+  indent: 2
+MD009:        # Trailing spaces
+  br_spaces: 2
+MD010: false  # Hard tabs
+MD011: false  # Reversed link syntax
+MD012:        # Multiple consecutive blank lines
+  maximum: 2
+MD013:        # Line length
+  line_length: 120
+  code_blocks: false
+  tables: false
+MD014: false  # Dollar signs used before commands without showing output
+MD018: false  # No space after hash on atx style heading
+MD019: false  # Multiple spaces after hash on atx style heading
+MD020: false  # No space inside hashes on closed atx style heading
+MD021: false  # Multiple spaces inside hashes on closed atx style heading
+MD022:        # Headings should be surrounded by blank lines
+  lines_above: 1
+  lines_below: 1
+MD023: false  # Headings must start at the beginning of the line
+MD024:        # Multiple headings with the same content
+  allow_different_nesting: true
+MD025:        # Multiple top-level headings in the same document
+  front_matter_title: ""
+MD026:        # Trailing punctuation in heading
+  punctuation: ".,;:!。，；：！"
+MD027: false  # Multiple spaces after blockquote symbol
+MD028: false  # Blank line inside blockquote
+MD029:        # Ordered list item prefix
+  style: "one"
+MD030:        # Spaces after list markers
+  ul_single: 1
+  ol_single: 1
+  ul_multi: 1
+  ol_multi: 1
+MD031:        # Fenced code blocks should be surrounded by blank lines
+  list_items: false
+MD032: false  # Lists should be surrounded by blank lines
+MD033:        # Inline HTML
+  allowed_elements:
+    - "br"
+    - "hr"
+    - "img"
+    - "a"
+    - "span"
+    - "div"
+    - "p"
+    - "strong"
+    - "em"
+    - "code"
+    - "pre"
+    - "ul"
+    - "ol"
+    - "li"
+    - "table"
+    - "thead"
+    - "tbody"
+    - "tr"
+    - "th"
+    - "td"
+MD034: false  # Bare URL used
+MD035:        # Horizontal rule style
+  style: "---"
+MD036:        # Emphasis used instead of a heading
+  punctuation: ".,;:!。，；：！"
+MD037: false  # Spaces inside emphasis markers
+MD038: false  # Spaces inside code span elements
+MD039: false  # Spaces inside link text
+MD040: false  # Fenced code blocks should have a language specified
+MD041:        # First line in a file should be a top-level heading
+  level: 1
+  front_matter_title: ""
+MD042: false  # No empty links
+MD043: false  # Required heading structure
+MD044:        # Proper names should have the correct capitalization
+  names:
+    - "Python"
+    - "FastAPI"
+    - "PostgreSQL"
+    - "Redis"
+    - "Docker"
+    - "Celery"
+    - "Prometheus"
+    - "Grafana"
+    - "S3"
+    - "MinIO"
+    - "AWS"
+    - "Google Cloud"
+    - "Azure"
+    - "JWT"
+    - "API"
+    - "REST"
+    - "JSON"
+    - "YAML"
+    - "TOML"
+    - "HTML"
+    - "CSS"
+    - "JavaScript"
+    - "TypeScript"
+    - "Git"
+    - "GitHub"
+    - "Linux"
+    - "macOS"
+    - "Windows"
+    - "Ubuntu"
+    - "Debian"
+    - "CentOS"
+    - "Nginx"
+    - "SSL"
+    - "TLS"
+    - "HTTP"
+    - "HTTPS"
+    - "WebSocket"
+    - "WebRTC"
+    - "MP3"
+    - "WAV"
+    - "FLAC"
+    - "OGG"
+    - "AAC"
+    - "M4A"
+    - "AI"
+    - "ИИ"
+    - "StereoBrother"
+MD045: false  # Images should have alternate text (alt text)
+MD046:        # Code block style
+  style: "fenced"
+MD047: false  # Files should end with a single newline character
+MD048:        # Code fence style
+  style: "backtick"
+
+# Ignore specific files and directories
+ignores:
+  - "node_modules/"
+  - ".git/"
+  - ".github/"
+  - "venv/"
+  - ".venv/"
+  - "env/"
+  - ".env"
+  - ".env.*"
+  - "storage/"
+  - "temp/"
+  - "logs/"
+  - "models/"
+  - "__pycache__/"
+  - "*.pyc"
+  - "*.pyo"
+  - "*.pyd"
+  - ".Python"
+  - "build/"
+  - "dist/"
+  - "*.egg-info/"
+  - ".DS_Store"
+  - ".vscode/"
+  - ".idea/"
+  - "*.swp"
+  - "*.swo"
+  - "*~"
+
+# Language-specific configurations
+language: "ru"

@@ -1,0 +1,164 @@
+# YAML lint configuration for StereoBrother Bot
+# Based on yamllint default rules
+
+extends: default
+
+rules:
+  # Line length
+  line-length:
+    max: 120
+    allow-non-breakable-words: true
+    allow-non-breakable-inline-mappings: false
+
+  # Indentation
+  indentation:
+    spaces: 2
+    indent-sequences: consistent
+    check-multi-line-strings: false
+
+  # Trailing spaces
+  trailing-spaces: enable
+
+  # Empty lines
+  empty-lines:
+    max: 2
+    max-start: 0
+    max-end: 1
+
+  # Document start
+  document-start:
+    present: false  # Don't require --- at start
+
+  # Document end
+  document-end:
+    present: false  # Don't require ... at end
+
+  # Key duplication
+  key-duplicates: enable
+
+  # Truthy values
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no', 'on', 'off']
+
+  # Comments
+  comments:
+    require-starting-space: true
+    min-spaces-from-content: 1
+
+  # Braces
+  braces:
+    max-spaces-inside: 1
+    min-spaces-inside: 0
+    max-spaces-inside-empty: 0
+    min-spaces-inside-empty: 0
+
+  # Brackets
+  brackets:
+    max-spaces-inside: 1
+    min-spaces-inside: 0
+    max-spaces-inside-empty: 0
+    min-spaces-inside-empty: 0
+
+  # Colons
+  colons:
+    max-spaces-before: 0
+    max-spaces-after: 1
+
+  # Commas
+  commas:
+    max-spaces-before: 0
+    min-spaces-after: 1
+    max-spaces-after: 1
+
+  # Hyphens in lists
+  hyphens:
+    max-spaces-after: 1
+
+  # Indentation of comments
+  comments-indentation: enable
+
+  # Key ordering (disabled as it can be too strict)
+  key-ordering: disable
+
+  # Octal values
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true
+
+  # Quoted strings
+  quoted-strings:
+    quote-type: single
+    required: only-when-needed
+    extra-allowed: ['http://', 'https://', 'ftp://']
+
+  # Trailing commas in sequences
+  trailing-commas:
+    max-spaces-before: 0
+
+  # YAML version
+  yaml-version:
+    allowed-versions: ['1.1', '1.2']
+
+  # Anchors and aliases
+  anchors:
+    forbid-unused: true
+
+  # Flow style
+  flow-sequence:
+    max-spaces-inside: 1
+    min-spaces-inside: 0
+
+  flow-mapping:
+    max-spaces-inside: 1
+    min-spaces-inside: 0
+
+  # Block sequences
+  block-sequences:
+    max-spaces-inside: 1
+    min-spaces-inside: 0
+
+  # Block mappings
+  block-mappings:
+    max-spaces-inside: 1
+    min-spaces-inside: 0
+
+# Ignore specific files
+ignore: |
+  .github/
+  node_modules/
+  venv/
+  .venv/
+  env/
+  .env
+  .env.*
+  storage/
+  temp/
+  logs/
+  models/
+  __pycache__/
+  *.pyc
+  *.pyo
+  *.pyd
+  .Python
+  build/
+  develop-eggs/
+  dist/
+  downloads/
+  eggs/
+  .eggs/
+  lib/
+  lib64/
+  parts/
+  sdist/
+  var/
+  wheels/
+  *.egg-info/
+  .installed.cfg
+  *.egg
+  MANIFEST
+  .DS_Store
+  .vscode/
+  .idea/
+  *.swp
+  *.swo
+  *~

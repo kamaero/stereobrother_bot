@@ -1,0 +1,312 @@
+# Dependabot configuration for StereoBrother Bot
+# Automatically updates dependencies and sends pull requests
+
+version: 2
+updates:
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Moscow"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "python"
+      - "automated"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    reviewers:
+      - "stereobrother-team"
+    assignees:
+      - "stereobrother-team"
+    ignore:
+      # Ignore major version updates for critical dependencies
+      - dependency-name: "fastapi"
+        versions: [">= 1.0.0"]
+      - dependency-name: "pydantic"
+        versions: [">= 3.0.0"]
+      - dependency-name: "torch"
+        versions: [">= 3.0.0"]
+      - dependency-name: "sqlalchemy"
+        versions: [">= 3.0.0"]
+      # Ignore breaking changes
+      - dependency-name: "celery"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "redis"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "postgresql"
+        update-types: ["version-update:semver-major"]
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "09:00"
+      timezone: "Europe/Moscow"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "docker"
+      - "automated"
+    commit-message:
+      prefix: "chore(docker)"
+      include: "scope"
+    reviewers:
+      - "stereobrother-team"
+    assignees:
+      - "stereobrother-team"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "09:00"
+      timezone: "Europe/Moscow"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "automated"
+    commit-message:
+      prefix: "chore(actions)"
+      include: "scope"
+    reviewers:
+      - "stereobrother-team"
+    assignees:
+      - "stereobrother-team"
+
+  # Docker Compose
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: "first monday"
+      time: "10:00"
+      timezone: "Europe/Moscow"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "docker-compose"
+      - "automated"
+    commit-message:
+      prefix: "chore(compose)"
+      include: "scope"
+    reviewers:
+      - "stereobrother-team"
+    assignees:
+      - "stereobrother-team"
+
+  # Security updates (runs daily)
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "03:00"
+      timezone: "Europe/Moscow"
+    open-pull-requests-limit: 20
+    labels:
+      - "security"
+      - "dependencies"
+      - "python"
+      - "automated"
+    commit-message:
+      prefix: "security"
+      include: "scope"
+    reviewers:
+      - "stereobrother-team"
+    assignees:
+      - "stereobrother-team"
+    # Only update security vulnerabilities
+    target-branch: "security-updates"
+    pull-request-branch-name:
+      separator: "-"
+    groups:
+      security-updates:
+        patterns:
+          - "*"
+
+  # Development dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "thursday"
+      time: "09:00"
+      timezone: "Europe/Moscow"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "dev"
+      - "automated"
+    commit-message:
+      prefix: "chore(dev-deps)"
+      include: "scope"
+    reviewers:
+      - "stereobrother-team"
+    assignees:
+      - "stereobrother-team"
+    groups:
+      dev-dependencies:
+        dependency-type: "development"
+        patterns:
+          - "pytest*"
+          - "black"
+          - "isort"
+          - "flake8*"
+          - "mypy"
+          - "pre-commit"
+
+# Security configuration
+security-updates:
+  enable: true
+  # Auto-merge security patches with minor version updates
+  auto-merge:
+    minor:
+      enabled: true
+      required-checks:
+        - "lint"
+        - "test"
+        - "build"
+      commit-message:
+        title: "Auto-merge security update"
+        body: "Automatically merged security update for {{dependency-name}}"
+    patch:
+      enabled: true
+      required-checks:
+        - "lint"
+        - "test"
+        - "build"
+      commit-message:
+        title: "Auto-merge security patch"
+        body: "Automatically merged security patch for {{dependency-name}}"
+
+# Vulnerability alerts
+vulnerability-alerts:
+  enabled: true
+  assignees:
+    - "stereobrother-team"
+  labels:
+    - "security"
+    - "vulnerability"
+  # Auto-dismiss vulnerabilities that are not exploitable
+  auto-dismiss:
+    - reason: "not_used"
+      # Dismiss if the vulnerable code is not used
+    - reason: "tolerable_risk"
+      # Dismiss if the risk is acceptable
+    - reason: "false_positive"
+      # Dismiss if it's a false positive
+
+# Pull request configuration
+pull-request:
+  # Rebase strategy
+  rebase-strategy: "auto"
+  # Maximum number of open pull requests
+  open-pull-requests-limit: 30
+  # Branch configuration
+  branch:
+    prefix: "dependabot/"
+    separator: "/"
+  # Versioning strategy
+  versioning-strategy:
+    python: "increase-if-necessary"
+    docker: "increase-if-necessary"
+    github-actions: "increase-if-necessary"
+
+# Notifications
+notifications:
+  # Slack notifications
+  - type: "slack"
+    channel: "#dependencies"
+    webhook: "${{ secrets.SLACK_DEPENDABOT_WEBHOOK }}"
+    events:
+      - "pull_request_opened"
+      - "pull_request_merged"
+      - "security_update"
+      - "vulnerability_alert"
+
+  # Email notifications for security issues
+  - type: "email"
+    recipients:
+      - "security@stereobrother.com"
+    events:
+      - "security_update"
+      - "vulnerability_alert"
+
+  # Team notifications
+  - type: "team"
+    team: "stereobrother-team"
+    events:
+      - "pull_request_opened"
+      - "pull_request_merged"
+
+# Ignore specific dependencies
+ignore:
+  # Ignore beta/alpha releases
+  - dependency-name: "*"
+    versions: ["*-alpha", "*-beta", "*-rc", "*-pre"]
+
+  # Ignore specific packages that cause issues
+  - dependency-name: "torch"
+    versions: [">= 2.2.0", "< 2.3.0"]
+
+  # Ignore packages that require system dependencies we don't have
+  - dependency-name: "opencv-python"
+    versions: [">= 4.8.0"]
+
+  # Ignore packages with known compatibility issues
+  - dependency-name: "tensorflow"
+    versions: [">= 2.14.0"]
+
+# Group updates for related packages
+groups:
+  audio-processing:
+    patterns:
+      - "librosa*"
+      - "soundfile*"
+      - "pydub*"
+      - "audioread*"
+
+  ai-ml:
+    patterns:
+      - "torch*"
+      - "torchaudio*"
+      - "demucs*"
+      - "spleeter*"
+      - "openunmix*"
+
+  database:
+    patterns:
+      - "sqlalchemy*"
+      - "asyncpg*"
+      - "redis*"
+      - "aioredis*"
+
+  web-framework:
+    patterns:
+      - "fastapi*"
+      - "uvicorn*"
+      - "pydantic*"
+      - "aiohttp*"
+
+  monitoring:
+    patterns:
+      - "prometheus-client*"
+      - "sentry-sdk*"
+      - "structlog*"
+
+  dev-tools:
+    patterns:
+      - "black*"
+      - "isort*"
+      - "flake8*"
+      - "mypy*"
+      - "pytest*"
