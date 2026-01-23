@@ -13,9 +13,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-import aiofiles
-import librosa
-import noisereduce as nr
+import noisereduce as nr  # type: ignore
 import numpy as np
 import soundfile as sf
 from models.schemas import (
@@ -34,7 +32,6 @@ from config.settings import settings
 from utils.audio_utils import (
     calculate_loudness,
     convert_audio_format,
-    download_file_from_url,
     get_audio_info,
     load_audio_file,
     normalize_audio,
