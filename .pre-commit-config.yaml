@@ -13,12 +13,12 @@ repos:
       - id: check-toml
       - id: check-json
       - id: check-added-large-files
-        args: ['--maxkb=10240']
+        args: ["--maxkb=10240"]
       - id: check-merge-conflict
       - id: check-case-conflict
       - id: detect-private-key
       - id: mixed-line-ending
-        args: ['--fix=lf']
+        args: ["--fix=lf"]
 
   # Python code formatting with black
   - repo: https://github.com/psf/black
@@ -26,14 +26,14 @@ repos:
     hooks:
       - id: black
         language_version: python3.11
-        args: ['--line-length=88', '--target-version=py311']
+        args: ["--line-length=88", "--target-version=py311"]
 
   # Python import sorting with isort
   - repo: https://github.com/pycqa/isort
     rev: 5.12.0
     hooks:
       - id: isort
-        args: ['--profile=black', '--line-length=88']
+        args: ["--profile=black", "--line-length=88"]
 
   # Python linting with flake8
   - repo: https://github.com/pycqa/flake8
@@ -46,7 +46,7 @@ repos:
           - flake8-docstrings==1.7.0
           - flake8-simplify==0.20.0
           - pep8-naming==0.13.3
-        args: ['--max-line-length=88', '--extend-ignore=E203,W503']
+        args: ["--max-line-length=88", "--extend-ignore=E203,W503"]
 
   # Type checking with mypy
   - repo: https://github.com/pre-commit/mirrors-mypy
@@ -59,7 +59,7 @@ repos:
           - types-requests
           - types-PyYAML
           - sqlalchemy-stubs
-        args: ['--strict', '--ignore-missing-imports', '--show-error-codes']
+        args: ["--strict", "--ignore-missing-imports", "--show-error-codes"]
         exclude: ^(frontend/|tests/|docs/)
 
   # Security checks with bandit
@@ -67,7 +67,7 @@ repos:
     rev: 1.7.5
     hooks:
       - id: bandit
-        args: ['-c', 'pyproject.toml']
+        args: ["-c", "pyproject.toml"]
         exclude: ^(tests/|frontend/)
 
   # Check for common security issues
@@ -75,7 +75,7 @@ repos:
     rev: 1.7.5
     hooks:
       - id: bandit
-        args: ['-c', 'pyproject.toml', '-ll']
+        args: ["-c", "pyproject.toml", "-ll"]
         files: \.py$
         exclude: ^(tests/|frontend/)
 
@@ -84,7 +84,7 @@ repos:
     rev: v1.4.0
     hooks:
       - id: detect-secrets
-        args: ['--baseline', '.secrets.baseline']
+        args: ["--baseline", ".secrets.baseline"]
         exclude: ^(tests/|frontend/)
 
   # Shell script linting
@@ -106,7 +106,7 @@ repos:
     rev: v1.33.0
     hooks:
       - id: yamllint
-        args: ['-c', '.yamllint.yaml']
+        args: ["-c", ".yamllint.yaml"]
         files: \.(yaml|yml)$
 
   # Markdown linting
@@ -114,7 +114,7 @@ repos:
     rev: v0.37.0
     hooks:
       - id: markdownlint
-        args: ['--config', '.markdownlint.yaml']
+        args: ["--config", ".markdownlint.yaml"]
 
   # Git commit message linting
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
@@ -122,7 +122,7 @@ repos:
     hooks:
       - id: commitlint
         stages: [commit-msg]
-        additional_dependencies: ['@commitlint/config-conventional']
+        additional_dependencies: ["@commitlint/config-conventional"]
 
   # Check for broken symlinks
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -143,14 +143,7 @@ repos:
     hooks:
       - id: flake8
         name: Check for debug statements
-        args: ['--select=T100']
-
-  # Validate requirements files
-  - repo: https://github.com/sirosen/check-jsonschema
-    rev: 0.27.0
-    hooks:
-      - id: check-requirements-txt
-        files: requirements.*\.txt$
+        args: ["--select=T100"]
 
   # Validate GitHub Actions workflows
   - repo: https://github.com/sirosen/check-jsonschema
@@ -164,7 +157,7 @@ repos:
     rev: v4.5.0
     hooks:
       - id: check-added-large-files
-        args: ['--maxkb=5120']
+        args: ["--maxkb=5120"]
 
   # Sort requirements files
   - repo: https://github.com/thibaudcolas/curlylint
@@ -177,7 +170,7 @@ repos:
 default_language_version:
   python: python3.11
 
-default_stages: [commit, push]
+default_stages: [pre-commit, pre-push]
 
 # Fail fast on first error
 fail_fast: false
