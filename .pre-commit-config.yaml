@@ -4,7 +4,7 @@
 repos:
   # General hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
@@ -22,26 +22,26 @@ repos:
 
   # Python code formatting with black
   - repo: https://github.com/psf/black
-    rev: 23.11.0
+    rev: 26.1.0
     hooks:
       - id: black
-        language_version: python3.11
-        args: ["--line-length=88", "--target-version=py311"]
+        language_version: python3.9
+        args: ["--line-length=88", "--target-version=py39"]
 
   # Python import sorting with isort
   - repo: https://github.com/pycqa/isort
-    rev: 5.12.0
+    rev: 7.0.0
     hooks:
       - id: isort
         args: ["--profile=black", "--line-length=88"]
 
   # Python linting with flake8
   - repo: https://github.com/pycqa/flake8
-    rev: 7.1.1
+    rev: 7.3.0
     hooks:
       - id: flake8
         additional_dependencies:
-          - flake8-bugbear==24.11.29
+          - flake8-bugbear==25.11.29
           - flake8-comprehensions==3.14.0
           - flake8-docstrings==1.7.0
           - flake8-simplify==0.20.0
@@ -50,7 +50,7 @@ repos:
 
   # Type checking with mypy
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.10.0
+    rev: v1.19.1
     hooks:
       - id: mypy
         additional_dependencies:
@@ -64,7 +64,7 @@ repos:
 
   # Security checks with bandit
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.8
+    rev: 1.8.6
     hooks:
       - id: bandit
         args: ["-c", "pyproject.toml"]
@@ -72,7 +72,7 @@ repos:
 
   # Check for common security issues
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.8
+    rev: 1.8.6
     hooks:
       - id: bandit
         args: ["-c", "pyproject.toml", "-ll"]
@@ -89,21 +89,21 @@ repos:
 
   # Shell script linting
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.10.0.1
+    rev: v0.11.0.1
     hooks:
       - id: shellcheck
         files: \.(sh|bash)$
 
   # Dockerfile linting
   - repo: https://github.com/hadolint/hadolint
-    rev: v2.12.0
+    rev: v2.14.0
     hooks:
       - id: hadolint
         files: Dockerfile
 
   # YAML linting
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.35.1
+    rev: v1.38.0
     hooks:
       - id: yamllint
         args: ["-c", ".yamllint.yaml"]
@@ -111,14 +111,14 @@ repos:
 
   # Markdown linting
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.41.0
+    rev: v0.47.0
     hooks:
       - id: markdownlint
         args: ["--config", ".markdownlint.yaml"]
 
   # Git commit message linting
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
-    rev: v9.6.0
+    rev: v9.24.0
     hooks:
       - id: commitlint
         stages: [commit-msg]
@@ -126,20 +126,20 @@ repos:
 
   # Check for broken symlinks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v6.0.0
     hooks:
       - id: check-symlinks
 
   # Remove unused imports
   - repo: https://github.com/hadialqattan/pycln
-    rev: v2.4.0
+    rev: v2.6.0
     hooks:
       - id: pycln
         args: [--config=pyproject.toml]
 
   # Check for debug statements
   - repo: https://github.com/pycqa/flake8
-    rev: 6.1.0
+    rev: 7.3.0
     hooks:
       - id: flake8
         name: Check for debug statements
@@ -147,28 +147,28 @@ repos:
 
   # Validate GitHub Actions workflows
   - repo: https://github.com/sirosen/check-jsonschema
-    rev: 0.29.0
+    rev: 0.36.0
     hooks:
       - id: check-github-workflows
         files: ^\.github/workflows/
 
   # Check for large files
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
         args: ["--maxkb=5120"]
 
-  # Sort requirements files
+  # HTML linting with curlylint
   - repo: https://github.com/thibaudcolas/curlylint
-    rev: v0.14.0
+    rev: v0.13.1
     hooks:
       - id: curlylint
         files: \.html$
 
 # Default configuration
 default_language_version:
-  python: python3.11
+  python: python3.9
 
 default_stages: [pre-commit, pre-push]
 
