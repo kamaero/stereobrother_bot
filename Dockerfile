@@ -1,48 +1,33 @@
 # Dockerfile для бота обработки аудио StereoBrother
 
 # Используем официальный Python образ
-FROM python:3.11-slim as builder
+FROM python:3.11-slim AS builder
 
 # Устанавливаем системные зависимости
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
-    software-properties-common \
     git \
     ffmpeg \
     libsndfile1 \
-    libsndfile-dev \
-    libavcodec-extra \
     && rm -rf /var/lib/apt/lists/*
-
-# Устанавливаем Poetry для управления зависимостями
-RUN pip install poetry==1.7.0
-
-# Настраиваем Poetry
-ENV POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_IN_PROJECT=1 \
-    POETRY_VIRTUALENVS_CREATE=1 \
-    POETRY_CACHE_DIR=/tmp/poetry_cache
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
 # Копируем файлы зависимостей
-COPY pyproject.toml poetry.lock* ./
+COPY requirements.txt ./
 
 # Устанавливаем зависимости
-RUN poetry install --no-root --only main
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Создаем финальный образ
-FROM python:3.11-slim as runtime
+FROM python:3.11-slim AS runtime
 
 # Устанавливаем системные зависимости для runtime
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     libsndfile1 \
-    libavcodec-extra \
-    libgl1-mesa-glx \
-    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Создаем пользователя для безопасности
@@ -51,9 +36,9 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser
 # Настраиваем рабочую директорию
 WORKDIR /app
 
-# Копируем виртуальное окружение из builder
-COPY --from=builder /app/.venv .venv
-ENV PATH="/app/.venv/bin:$PATH"
+# Копируем установленные зависимости из builder
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Копируем исходный код
 COPY . .

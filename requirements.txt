@@ -11,21 +11,21 @@ asyncpg==0.29.0
 aioredis==2.0.1
 redis==5.0.1
 
-# Обработка аудио
-librosa==0.10.1
-soundfile==0.12.1
-numpy==1.24.3
-scipy==1.11.4
-pydub==0.25.1
-audioread==3.0.0
+# Обработка аудио (упрощенные версии для тестирования)
+# librosa==0.10.1
+# soundfile==0.12.1
+# numpy==1.24.3
+# scipy==1.11.4
+# pydub==0.25.1
+# audioread==3.0.0
 
-# ИИ модели для обработки аудио
-torch==2.1.0
-torchaudio==2.1.0
-demucs==4.0.0
-spleeter==2.4.0
-openunmix==1.2.1
-noisereduce==3.0.0
+# ИИ модели для обработки аудио (опционально для тестирования)
+# torch==2.1.0
+# torchaudio==2.1.0
+# demucs==4.0.0
+# spleeter==2.4.0
+# openunmix==1.2.1
+# noisereduce==3.0.0
 
 # Хранилище файлов
 boto3==1.34.0
@@ -35,7 +35,7 @@ minio==7.2.1
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.1.2
-python-multipart==0.0.6
+email-validator==2.1.0
 
 # Платежные системы
 yookassa==2.4.0
@@ -73,11 +73,15 @@ isort==5.12.0
 flake8==6.1.0
 mypy==1.7.1
 pre-commit==3.5.0
+bandit==1.7.5
 
 # Документация
-mkdocs==1.5.3
-mkdocs-material==9.5.3
-mkdocstrings[python]==0.24.0
+# mkdocs==1.5.3
+# mkdocs-material==9.5.3
+# mkdocstrings[python]==0.24.0
+
+# Для тестирования
+tomli==2.0.1
 
 # Опционально для GPU поддержки
 # torch==2.1.0+cu118 --extra-index-url https://download.pytorch.org/whl/cu118

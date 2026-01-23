@@ -83,6 +83,7 @@ dev = [
     "flake8==6.1.0",
     "mypy==1.7.1",
     "pre-commit==3.5.0",
+    "bandit==1.7.5",
 ]
 docs = [
     "mkdocs==1.5.3",
@@ -173,6 +174,11 @@ module = [
     "openunmix.*",
 ]
 ignore_missing_imports = true
+
+[tool.bandit]
+exclude_dirs = ["tests", "frontend", "docs"]
+skips = ["B101", "B104", "B105", "B106", "B107", "B108", "B110", "B112", "B113"]
+targets = ["src", "config", "services", "utils"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

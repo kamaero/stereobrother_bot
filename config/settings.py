@@ -4,10 +4,10 @@
 
 import os
 from datetime import timedelta
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
-import torch
-from pydantic import BaseSettings, Field, validator
+from pydantic import Field, validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -97,7 +97,7 @@ class Settings(BaseSettings):
     }
 
     # Пресеты мастеринга
-    MASTERING_PRESETS: Dict[str, Dict[str, float]] = {
+    MASTERING_PRESETS: Dict[str, Dict[str, Any]] = {
         "podcast": {
             "name": "Мастеринг подкаста",
             "description": "Акцент на четкость речи",
@@ -183,10 +183,18 @@ class Settings(BaseSettings):
         env_file_encoding = "utf-8"
         case_sensitive = False
 
-    @validator("LOCAL_STORAGE_PATH", "TEMP_DIR", "AI_MODELS_PATH", "LOG_FILE")
+    @validator("LOCAL_STORAGE_PATH", "TEMP_DIR", "AI_MODELS_PATH")
     def ensure_directories_exist(cls, v):
         """Создает директории, если они не существуют"""
         os.makedirs(v, exist_ok=True)
+        return v
+
+    @validator("LOG_FILE")
+    def ensure_log_directory_exists(cls, v):
+        """Создает директорию для лог-файла, если она не существует"""
+        log_dir = os.path.dirname(v)
+        if log_dir:
+            os.makedirs(log_dir, exist_ok=True)
         return v
 
     @validator("SUPPORTED_INPUT_FORMATS", "SUPPORTED_OUTPUT_FORMATS")
@@ -279,10 +287,15 @@ class Settings(BaseSettings):
     @property
     def torch_device(self) -> str:
         """Определяет оптимальное устройство для вычислений (MPS, CUDA, CPU)"""
-        if torch.backends.mps.is_available():
-            return "mps"
-        elif torch.cuda.is_available():
-            return "cuda"
+        try:
+            import torch
+
+            if torch.backends.mps.is_available():
+                return "mps"
+            elif torch.cuda.is_available():
+                return "cuda"
+        except ImportError:
+            pass
         return "cpu"
 
 
