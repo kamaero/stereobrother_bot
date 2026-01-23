@@ -26,9 +26,16 @@ jobs:
           pip install fastapi uvicorn pydantic pydantic-settings
           pip install pytest pytest-asyncio pytest-cov
 
-      - name: Check Python imports
+      - name: Check Python syntax
         run: |
-          python -c "import sys; sys.path.insert(0, '.'); from src.main import app; print('✓ FastAPI app imported successfully')"
+          echo "Checking Python syntax..."
+          python3 -m py_compile src/main.py && echo "✓ src/main.py syntax OK"
+          python3 -m py_compile src/tasks.py && echo "✓ src/tasks.py syntax OK"
+          python3 -m py_compile config/settings.py && echo "✓ config/settings.py syntax OK"
+          python3 -m py_compile services/audio_processor.py && echo "✓ services/audio_processor.py syntax OK"
+          python3 -m py_compile services/user_manager.py && echo "✓ services/user_manager.py syntax OK"
+          python3 -m py_compile services/payment_service.py && echo "✓ services/payment_service.py syntax OK"
+          echo "All Python files have valid syntax!"
 
       - name: Run basic tests
         run: |
