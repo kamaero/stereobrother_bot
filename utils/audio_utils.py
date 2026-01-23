@@ -10,6 +10,7 @@ import tempfile
 from pathlib import Path
 from typing import Dict, Optional, Tuple, Union
 
+import aiohttp
 import librosa
 import numpy as np
 import soundfile as sf
@@ -19,6 +20,33 @@ from scipy import signal
 from config.settings import settings
 
 logger = logging.getLogger(__name__)
+
+
+async def download_file_from_url(url: str, output_path: str) -> str:
+    """
+    Скачивание файла по URL
+
+    Args:
+        url: Ссылка на файл
+        output_path: Путь для сохранения
+
+    Returns:
+        Путь к сохраненному файлу
+    """
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                response.raise_for_status()
+                with open(output_path, "wb") as f:
+                    while True:
+                        chunk = await response.content.read(8192)
+                        if not chunk:
+                            break
+                        f.write(chunk)
+        return output_path
+    except Exception as e:
+        logger.error(f"Ошибка при скачивании файла {url}: {str(e)}")
+        raise ValueError(f"Не удалось скачать файл: {str(e)}")
 
 
 async def load_audio_file(

@@ -6,6 +6,7 @@ import os
 from datetime import timedelta
 from typing import Dict, List, Optional
 
+import torch
 from pydantic import BaseSettings, Field, validator
 
 
@@ -274,6 +275,15 @@ class Settings(BaseSettings):
     def is_development(self) -> bool:
         """Проверяет, является ли среда development"""
         return self.ENVIRONMENT.lower() == "development"
+
+    @property
+    def torch_device(self) -> str:
+        """Определяет оптимальное устройство для вычислений (MPS, CUDA, CPU)"""
+        if torch.backends.mps.is_available():
+            return "mps"
+        elif torch.cuda.is_available():
+            return "cuda"
+        return "cpu"
 
 
 # Создаем экземпляр настроек

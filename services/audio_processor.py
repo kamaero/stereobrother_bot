@@ -7,6 +7,7 @@ import json
 import logging
 import os
 import shutil
+import subprocess
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -14,20 +15,9 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import aiofiles
 import librosa
+import noisereduce as nr
 import numpy as np
 import soundfile as sf
-from pydantic import ValidationError
-from utils.audio_utils import (
-    calculate_loudness,
-    convert_audio_format,
-    get_audio_info,
-    load_audio_file,
-    normalize_audio,
-    save_audio_file,
-)
-from utils.storage import StorageManager
-
-from config.settings import settings
 from models.schemas import (
     EnhancementMode,
     MasteringPreset,
@@ -38,6 +28,19 @@ from models.schemas import (
     TaskStatus,
     TaskStatusResponse,
 )
+from pydantic import ValidationError
+
+from config.settings import settings
+from utils.audio_utils import (
+    calculate_loudness,
+    convert_audio_format,
+    download_file_from_url,
+    get_audio_info,
+    load_audio_file,
+    normalize_audio,
+    save_audio_file,
+)
+from utils.storage import StorageManager
 
 
 class AudioProcessor:
@@ -349,13 +352,11 @@ class AudioProcessor:
             # Создаем временный файл для обработки
             temp_file = await self._create_temp_file(task["file_path"])
 
-            # Загружаем аудио
-            audio_data, sample_rate = await load_audio_file(temp_file)
+            # Загружаем аудио (для проверки и получения sample_rate)
+            _, sample_rate = await load_audio_file(temp_file)
 
             # Разделяем на дорожки
-            stems = await self._separate_audio_stems(
-                audio_data, sample_rate, configuration
-            )
+            stems = await self._separate_audio_stems(temp_file, configuration)
 
             # Сохраняем результаты
             stem_results = {}
@@ -722,18 +723,22 @@ class AudioProcessor:
         self, audio_data: np.ndarray, sample_rate: int
     ) -> np.ndarray:
         """
-        Улучшение полного микса
-
-        Args:
-            audio_data: Аудио данные
-            sample_rate: Частота дискретизации
-
-        Returns:
-            Улучшенные аудио данные
+        Улучшение полного микса (Local DSP)
+        Включает: High-Pass, Low-Pass, легкую компрессию и нормализацию.
         """
-        # TODO: Реализовать улучшение полного микса с помощью ИИ
-        # Для MVP возвращаем нормализованные данные
-        enhanced_audio = await normalize_audio(audio_data)
+        # 1. High-Pass фильтр (убираем гул ниже 30Гц)
+        enhanced_audio = await self._apply_eq(
+            audio_data, sample_rate, {"high_pass": {"freq": 30}}
+        )
+
+        # 2. Небольшое поднятие верхов ("воздух")
+        enhanced_audio = await self._apply_eq(
+            enhanced_audio, sample_rate, {"high_shelf": {"freq": 10000, "gain": 1.5}}
+        )
+
+        # 3. Нормализация
+        enhanced_audio = await normalize_audio(enhanced_audio, target_db=-1.0)
+
         return enhanced_audio
 
     async def _enhance_instrument(
@@ -743,28 +748,27 @@ class AudioProcessor:
         instrument: EnhancementMode,
     ) -> np.ndarray:
         """
-        Улучшение отдельного инструмента
-
-        Args:
-            audio_data: Аудио данные
-            sample_rate: Частота дискретизации
-            instrument: Инструмент для улучшения
-
-        Returns:
-            Улучшенные аудио данные
+        Улучшение отдельного инструмента (Local DSP)
         """
-        # TODO: Реализовать улучшение инструментов с помощью ИИ
-        # Для MVP возвращаем нормализованные данные
-        enhanced_audio = await normalize_audio(audio_data)
+        enhanced_audio = audio_data.copy()
 
-        # Добавляем базовую обработку в зависимости от инструмента
+        # Применяем EQ в зависимости от инструмента
         if instrument == EnhancementMode.VOCALS:
-            # Для вокала - небольшое усиление высоких частот
+            # Срезаем низ, добавляем презенс
             enhanced_audio = await self._apply_eq(
-                enhanced_audio, sample_rate, {"high_shelf": {"freq": 5000, "gain": 3}}
+                enhanced_audio,
+                sample_rate,
+                {
+                    "high_pass": {"freq": 80},
+                    "high_shelf": {"freq": 5000, "gain": 3},
+                    "peak": {
+                        "freq": 300,
+                        "gain": -2,
+                        "q": 1.0,
+                    },  # убираем "коробочность"
+                },
             )
         elif instrument == EnhancementMode.DRUMS:
-            # Для ударных - усиление низких и высоких частот
             enhanced_audio = await self._apply_eq(
                 enhanced_audio,
                 sample_rate,
@@ -774,11 +778,17 @@ class AudioProcessor:
                 },
             )
         elif instrument == EnhancementMode.BASS:
-            # Для баса - усиление низких частот
             enhanced_audio = await self._apply_eq(
-                enhanced_audio, sample_rate, {"low_shelf": {"freq": 200, "gain": 6}}
+                enhanced_audio,
+                sample_rate,
+                {
+                    "low_shelf": {"freq": 200, "gain": 4},
+                    "high_pass": {"freq": 40},
+                },
             )
 
+        # Финальная нормализация
+        enhanced_audio = await normalize_audio(enhanced_audio)
         return enhanced_audio
 
     async def _apply_denoising(
@@ -789,77 +799,130 @@ class AudioProcessor:
         intensity: float,
     ) -> np.ndarray:
         """
-        Применение денойзинга
-
-        Args:
-            audio_data: Аудио данные
-            sample_rate: Частота дискретизации
-            noise_types: Типы шумов для удаления
-            intensity: Интенсивность очистки
-
-        Returns:
-            Очищенные аудио данные
+        Локальный денойзинг с использованием noisereduce
         """
-        # TODO: Реализовать денойзинг с помощью ИИ
-        # Для MVP применяем простой фильтр высоких частот для удаления шипения
-        denoised_audio = audio_data.copy()
+        try:
+            self.logger.info("Запуск локального шумоподавления (noisereduce)")
 
-        if "hiss" in noise_types:
-            # Простой фильтр высоких частот для удаления шипения
-            from scipy import signal
+            # noisereduce работает лучше всего со стационарным шумом
+            # prop_decrease контролирует силу подавления (0.0 - 1.0)
 
-            nyquist = sample_rate / 2
-            cutoff = 100  # Hz
-            b, a = signal.butter(4, cutoff / nyquist, btype="high")
-            denoised_audio = signal.filtfilt(b, a, denoised_audio, axis=0)
+            # Подготовка данных: noisereduce работает с формой (channels, samples) или (samples,)
+            # Наш audio_data обычно (samples, channels) или (samples,)
 
-        # Применяем интенсивность
-        if intensity < 1.0:
-            # Смешиваем с оригиналом в зависимости от интенсивности
-            denoised_audio = intensity * denoised_audio + (1 - intensity) * audio_data
+            target_data = audio_data.T if audio_data.ndim > 1 else audio_data
 
-        return denoised_audio
+            # Запускаем в треде, так как это тяжелая операция
+            def run_nr():
+                return nr.reduce_noise(
+                    y=target_data,
+                    sr=sample_rate,
+                    prop_decrease=intensity,
+                    n_fft=2048,
+                    stationary=True,  # предполагаем постоянный фон (шипение, гул)
+                    n_jobs=2 if settings.torch_device == "cpu" else 1,
+                )
+
+            denoised_data = await asyncio.to_thread(run_nr)
+
+            # Возвращаем размерность обратно
+            if audio_data.ndim > 1:
+                denoised_data = denoised_data.T
+
+            return denoised_data
+
+        except Exception as e:
+            self.logger.error(f"Ошибка noisereduce: {e}")
+            raise
 
     async def _separate_audio_stems(
         self,
-        audio_data: np.ndarray,
-        sample_rate: int,
+        file_path: str,
         configuration: StemConfiguration,
     ) -> Dict[str, np.ndarray]:
         """
-        Разделение аудио на дорожки
-
-        Args:
-            audio_data: Аудио данные
-            sample_rate: Частота дискретизации
-            configuration: Конфигурация разделения
-
-        Returns:
-            Словарь с разделенными дорожками
+        Локальное разделение аудио через Demucs CLI
         """
-        # TODO: Реализовать разделение дорожек с помощью ИИ (Demucs, Spleeter)
-        # Для MVP создаем заглушки
+        try:
+            self.logger.info(
+                f"Запуск локального Demucs на {settings.torch_device} для {file_path}"
+            )
 
-        stems = {}
+            # Создаем временную директорию для выхода demucs
+            output_dir = os.path.join(settings.TEMP_DIR, f"demucs_{uuid.uuid4()}")
+            os.makedirs(output_dir, exist_ok=True)
 
-        if configuration == StemConfiguration.BASIC:
-            stems = {
-                "vocals": audio_data * 0.7,  # Вокал
-                "drums": audio_data * 0.5,  # Ударные
-                "bass": audio_data * 0.4,  # Бас
-                "other": audio_data * 0.6,  # Остальное
-            }
-        elif configuration == StemConfiguration.ADVANCED:
-            stems = {
-                "vocals": audio_data * 0.7,  # Вокал
-                "drums": audio_data * 0.5,  # Ударные
-                "bass": audio_data * 0.4,  # Бас
-                "guitar": audio_data * 0.3,  # Гитара
-                "piano": audio_data * 0.3,  # Пианино
-                "other": audio_data * 0.4,  # Остальное
-            }
+            # Определяем команду
+            # htdemucs - быстрая гибридная модель
+            model_name = "htdemucs"
 
-        return stems
+            cmd = [
+                "demucs",
+                "--name",
+                model_name,
+                "--device",
+                settings.torch_device,
+                "--out",
+                output_dir,
+                # Сохранять как float32 (лучшее качество для постобработки)
+                "--float32",
+                file_path,
+            ]
+
+            self.logger.info(f"Command: {' '.join(cmd)}")
+
+            # Запускаем процесс
+            process = await asyncio.create_subprocess_exec(
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            )
+
+            stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                self.logger.error(f"Demucs error: {stderr.decode()}")
+                raise RuntimeError(f"Demucs failed with code {process.returncode}")
+
+            # Ищем результаты
+            # Структура: output_dir/htdemucs/{filename_without_ext}/{stem}.wav
+            filename_no_ext = Path(file_path).stem
+            result_dir = os.path.join(output_dir, model_name, filename_no_ext)
+
+            if not os.path.exists(result_dir):
+                # Иногда demucs нормализует имя файла (убирает пробелы и т.д.)
+                # Попробуем найти единственную папку внутри
+                subdirs = [
+                    d
+                    for d in os.listdir(os.path.join(output_dir, model_name))
+                    if os.path.isdir(os.path.join(output_dir, model_name, d))
+                ]
+                if subdirs:
+                    result_dir = os.path.join(output_dir, model_name, subdirs[0])
+                else:
+                    raise FileNotFoundError(
+                        f"Результаты Demucs не найдены в {output_dir}"
+                    )
+
+            stems = {}
+            # Стандартные стемы Demucs: vocals, drums, bass, other
+            source_stems = ["vocals", "drums", "bass", "other"]
+
+            for stem_name in source_stems:
+                stem_path = os.path.join(result_dir, f"{stem_name}.wav")
+                if os.path.exists(stem_path):
+                    stem_audio, _ = await load_audio_file(stem_path)
+                    stems[stem_name] = stem_audio
+
+            # Очистка
+            try:
+                shutil.rmtree(output_dir)
+            except Exception as e:
+                self.logger.warning(f"Не удалось удалить временную папку Demucs: {e}")
+
+            return stems
+
+        except Exception as e:
+            self.logger.error(f"Ошибка локального Demucs: {e}")
+            raise
 
     async def _apply_mastering(
         self,
