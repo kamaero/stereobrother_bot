@@ -1,0 +1,18 @@
+# Minimal requirements for CI testing
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+celery==5.3.4
+email-validator==2.1.0
+python-dotenv==1.0.0
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+httpx==0.25.1
+black==23.11.0
+isort==5.12.0
+flake8==6.1.0
+mypy==1.7.1
+bandit==1.7.5
+tomli==2.0.1
