@@ -12,6 +12,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.staticfiles import StaticFiles
 
 from config.settings import settings
 
@@ -91,15 +92,7 @@ async def get_current_user(user: Dict = Depends(authenticate_request)) -> Dict:
     return user
 
 
-# Основные маршруты
-@app.get("/")
-async def root():
-    """Корневой маршрут."""
-    return {
-        "message": "Welcome to StereoBrother Bot API",
-        "version": settings.APP_VERSION,
-        "docs": "/docs" if settings.DEBUG else None,
-    }
+# API маршруты
 
 
 @app.get("/health")
@@ -271,10 +264,18 @@ async def general_exception_handler(request: Request, exc: Exception):
     )
 
 
+# Раздача фронтенда — должна быть ПОСЛЕДНЕЙ, чтобы не затенять API
+import os as _os
+
+_frontend_dir = _os.path.join(_os.path.dirname(_os.path.dirname(__file__)), "frontend")
+if _os.path.isdir(_frontend_dir):
+    app.mount("/", StaticFiles(directory=_frontend_dir, html=True), name="frontend")
+
+
 # Точка входа для запуска приложения
 if __name__ == "__main__":
     uvicorn.run(
-        "src.main_minimal:app",
+        "src.main:app",
         host=settings.HOST,
         port=settings.PORT,
         reload=settings.DEBUG,
